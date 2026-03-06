@@ -32,7 +32,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-=mli(yz$#mz+nn*7*l3r4
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 't']
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
-
+# Autorise Django à faire confiance à ton domaine Render pour les formulaires
+CSRF_TRUSTED_ORIGINS = [
+    'https://social-network-n8xb.onrender.com',
+]
 
 # Application definition
 
