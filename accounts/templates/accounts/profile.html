@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Paramètres — Messagerie{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col items-center pt-8 pb-16 px-4">
+
+    <!-- Page Header -->
+    <div class="w-full max-w-lg flex items-center justify-between mb-7">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center shadow-sm">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Paramètres</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'chat:index' %}" class="w-9 h-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </a>
+        </div>
+    </div>
+
+    <div class="w-full max-w-lg space-y-5">
+
+        <!-- Profile card -->
+        <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm ring-1 ring-gray-900/5 dark:ring-white/5 p-8 flex flex-col items-center text-center">
+            <div class="relative mb-5">
+                {% if user.photoProfil %}
+                <img src="{{ user.photoProfil.url }}" alt="Photo de profil"
+                    class="w-24 h-24 rounded-full object-cover ring-4 ring-white dark:ring-gray-800 shadow">
+                {% else %}
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-accent to-blue-400 flex items-center justify-center text-3xl font-bold text-white ring-4 ring-white dark:ring-gray-800 shadow">
+                    {{ user.prenom|first }}{{ user.nom|first }}
+                </div>
+                {% endif %}
+                <button title="Modifier la photo"
+                    class="absolute bottom-0.5 right-0.5 w-7 h-7 bg-accent text-white rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900 hover:bg-accent-hover transition-colors shadow">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+            </div>
+            <h2 class="text-[22px] font-bold text-gray-900 dark:text-white mb-1">{{ user.prenom }} {{ user.nom }}</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ user.email }}</p>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400 uppercase tracking-wide font-semibold mb-6">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Membre depuis {{ user.dateCreation|date:"M Y" }}
+            </div>
+            <div class="w-full grid grid-cols-2 gap-3">
+                <button class="py-2.5 rounded-xl bg-blue-50 dark:bg-accent/10 text-accent font-semibold text-sm hover:bg-blue-100 dark:hover:bg-accent/20 transition-colors">
+                    Modifier la photo
+                </button>
+                <button class="py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    Supprimer
+                </button>
+            </div>
+        </div>
+
+        <!-- Préférences -->
+        <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">Préférences</p>
+            <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm ring-1 ring-gray-900/5 dark:ring-white/5 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
+
+                <!-- Dark mode toggle -->
+                <div class="flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    onclick="toggleTheme(); updateToggle();">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[15px] font-semibold text-gray-900 dark:text-white">Mode sombre</p>
+                            <p class="text-[13px] text-gray-500 dark:text-gray-400">Ajuster l'apparence</p>
+                        </div>
+                    </div>
+                    <!-- Toggle -->
+                    <div id="toggle-bg" class="relative w-11 h-6 rounded-full transition-colors duration-200 bg-gray-200 dark:bg-accent">
+                        <span id="toggle-dot" class="absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 left-1 dark:left-6 shadow-sm"></span>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-rose-50 dark:bg-rose-500/10 text-rose-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[15px] font-semibold text-gray-900 dark:text-white">Notifications</p>
+                            <p class="text-[13px] text-gray-500 dark:text-gray-400">Alertes et sons</p>
+                        </div>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+
+                <!-- Privacy -->
+                <div class="flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[15px] font-semibold text-gray-900 dark:text-white">Confidentialité</p>
+                            <p class="text-[13px] text-gray-500 dark:text-gray-400">Mot de passe & sécurité</p>
+                        </div>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">Actions</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a href="{% url 'accounts:logout' %}"
+                    class="flex items-center justify-center gap-2.5 py-3.5 bg-white dark:bg-gray-900 ring-1 ring-gray-900/5 dark:ring-white/5 rounded-2xl text-[15px] font-semibold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 shadow-sm transition-colors">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Se déconnecter
+                </a>
+                <button class="flex items-center justify-center gap-2.5 py-3.5 bg-red-50 dark:bg-red-500/10 ring-1 ring-red-100 dark:ring-red-500/20 rounded-2xl text-[15px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Supprimer le compte
+                </button>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 pt-2">© 2026 Messagerie. Tous droits réservés.</p>
+    </div>
+</div>
+
+<script>
+function updateToggle() {
+    // Toggle state is driven by the 'dark' class on <html> via Tailwind
+    // The CSS dark: variants handle the visual update automatically
+}
+document.addEventListener('DOMContentLoaded', updateToggle);
+</script>
+{% endblock %}

@@ -1,0 +1,666 @@
+{% extends 'base.html' %}
+{% block title %}Messages — Messagerie{% endblock %}
+
+{% block content %}
+<div class="h-screen w-full flex overflow-hidden bg-white dark:bg-[#0C0C0C] text-gray-900 dark:text-gray-100">
+
+    <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+    <div id="sidebar"
+        class="w-full md:w-[340px] flex-shrink-0 h-full border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-[#111111] transition-all duration-300">
+
+        <!-- Sidebar header -->
+        <div class="px-5 pt-6 pb-3 flex-shrink-0">
+            <div class="flex items-center justify-between mb-5">
+                <h1 class="text-[22px] font-bold tracking-tight text-gray-900 dark:text-white">Messages</h1>
+                <div class="flex items-center gap-2">
+                    <button id="add-contact-btn" title="Ajouter un contact" onclick="document.getElementById('add-contact-modal').style.display='flex'"
+                        class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    </button>
+                    <button id="new-group-btn" title="Nouveau message (Groupe)" onclick="document.getElementById('create-group-modal').style.display='flex'"
+                        class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    </button>
+                    <button title="Nouveau message privé" onclick="document.getElementById('new-message-modal').style.display='flex'"
+                        class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <input type="text" id="search-input" oninput="filterItems(this.value)" placeholder="Rechercher…"
+                    class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 text-[14px] rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all border border-transparent focus:border-accent/30">
+            </div>
+
+            <!-- Stories / Status row -->
+            <div class="mt-5 -mx-1 px-1 overflow-x-auto hide-scroll flex gap-3 items-start" id="stories-list">
+                <!-- Add Status button -->
+                <div class="flex flex-col items-center gap-1 cursor-pointer flex-shrink-0"
+                    onclick="document.getElementById('add-status-modal').style.display='flex'">
+                    <div class="w-[52px] h-[52px] rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 hover:text-accent hover:border-accent transition-colors bg-gray-50 dark:bg-gray-800/50">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </div>
+                    <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">Statut</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="px-5 pb-2 flex gap-1 flex-shrink-0">
+            <button class="px-3 py-1.5 text-[13px] font-semibold text-accent bg-blue-50 dark:bg-accent/10 rounded-lg transition-colors">Tout</button>
+            <button class="px-3 py-1.5 text-[13px] font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">Non lus</button>
+            <button class="px-3 py-1.5 text-[13px] font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">Groupes</button>
+        </div>
+
+        <!-- Conversation list -->
+        <div class="flex-1 overflow-y-auto hide-scroll px-3 space-y-0.5 pb-3">
+            {% for d in discussions %}
+            <div onclick="openChat({{ d.id }}, this)"
+                class="sidebar-item flex items-center gap-3 w-full p-3 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors group">
+                <div class="relative flex-shrink-0">
+                    {% if d.photo %}
+                    <img src="{{ d.photo }}" alt="" class="w-12 h-12 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-accent flex items-center justify-center text-base font-bold text-white">
+                        {{ d.nom|first|upper }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                        <p class="text-[14px] font-semibold text-gray-900 dark:text-white truncate">{{ d.nom }}</p>
+                        <span class="text-[11px] font-medium text-gray-400 ml-2 flex-shrink-0">maintenant</span>
+                    </div>
+                    <p class="text-[13px] text-gray-500 dark:text-gray-400 truncate">Cliquez pour démarrer…</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="flex flex-col items-center justify-center py-12 text-center px-4">
+                <div class="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                </div>
+                <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Aucune conversation</p>
+                <p class="text-xs text-gray-400">Ajoutez un contact pour démarrer</p>
+            </div>
+            {% endfor %}
+
+            <!-- Contacts section -->
+            {% if contacts %}
+            <div class="px-1 pt-5 pb-2">
+                <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Contacts</p>
+            </div>
+            {% for contact in contacts %}
+            <div class="sidebar-item flex items-center gap-3 w-full p-3 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors group">
+                <div class="relative flex-shrink-0">
+                    {% if contact.photoProfil %}
+                    <img src="{{ contact.photoProfil.url }}" alt="" class="w-11 h-11 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-500 dark:text-gray-300">
+                        {{ contact.prenom|first }}{{ contact.nom|first }}
+                    </div>
+                    {% endif %}
+                    {% if contact.statutEnLigne %}
+                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-white dark:border-[#111111]"></span>
+                    {% endif %}
+                </div>
+                <div class="flex-1 min-w-0 flex items-center justify-between">
+                    <p class="text-[14px] font-semibold text-gray-900 dark:text-white truncate">{{ contact.prenom }} {{ contact.nom }}</p>
+                    <button onclick="startPrivateChat({{ contact.id }})"
+                        title="Envoyer un message"
+                        class="ml-2 p-2 rounded-xl text-accent hover:bg-accent/10 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Sidebar footer (own profile) -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    {% if user.photoProfil %}
+                    <img src="{{ user.photoProfil.url }}" alt="" class="w-9 h-9 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-accent flex items-center justify-center text-sm font-bold text-white">
+                        {{ user.prenom|first }}
+                    </div>
+                    {% endif %}
+                    <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-white dark:border-[#111111]"></span>
+                </div>
+                <div>
+                    <p class="text-[13px] font-bold text-gray-900 dark:text-white leading-none mb-0.5">{{ user.prenom }} {{ user.nom }}</p>
+                    <p class="text-[11px] text-success font-semibold">En ligne</p>
+                </div>
+            </div>
+            <a href="{% url 'accounts:profile' %}" title="Paramètres"
+                class="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-white transition-colors">
+                <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ MAIN CHAT AREA ═══════════════════ -->
+    <div id="main-chat" class="hidden md:flex flex-col flex-1 h-full overflow-hidden">
+        <!-- Empty state -->
+        <div id="empty-state" class="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gray-50/60 dark:bg-[#0C0C0C]">
+            <div class="w-20 h-20 bg-white dark:bg-gray-900 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
+                <svg class="w-9 h-9 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Vos messages</h2>
+            <p class="text-gray-400 text-sm max-w-xs">Sélectionnez une conversation dans la liste pour commencer à discuter.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- Add Contact Modal -->
+<div id="add-contact-modal"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-center justify-center p-4"
+    style="display:none"
+    onclick="if(event.target===this){this.style.display='none'}">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white">Ajouter un contact</h3>
+            <button onclick="document.getElementById('add-contact-modal').style.display='none'"
+                class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <input type="tel" id="contact-phone-input"
+                class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-[15px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all mb-4"
+                placeholder="Ex. +33 6 12 34 56 78">
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('add-contact-modal').style.display='none'"
+                    class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button onclick="addContactByPhone()"
+                    class="px-5 py-2.5 text-sm font-bold bg-accent hover:bg-accent-hover text-white rounded-xl transition-all shadow-sm active:scale-95">
+                    Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Group / Broadcast Modal -->
+<div id="create-group-modal"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-center justify-center p-4"
+    style="display:none"
+    onclick="if(event.target===this){this.style.display='none'}">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white">Nouvelle discussion (Groupe)</h3>
+            <button onclick="document.getElementById('create-group-modal').style.display='none'"
+                class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto hide-scroll flex-1 space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">Nom du groupe</label>
+                <input type="text" id="group-name-input"
+                    class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-[15px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+                    placeholder="Nom du groupe ou de la diffusion">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1">Sélectionner les contacts</label>
+                <div class="space-y-2" id="group-contacts-list">
+                    {% for contact in contacts %}
+                    <label class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div class="flex items-center gap-3">
+                            {% if contact.photoProfil %}
+                            <img src="{{ contact.photoProfil.url }}" alt="" class="w-10 h-10 rounded-full object-cover">
+                            {% else %}
+                            <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-500 dark:text-gray-300">
+                                {{ contact.prenom|first }}{{ contact.nom|first }}
+                            </div>
+                            {% endif %}
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ contact.prenom }} {{ contact.nom }}</span>
+                        </div>
+                        <input type="checkbox" value="{{ contact.id }}" class="group-contact-checkbox w-5 h-5 text-accent border-gray-300 rounded focus:ring-accent">
+                    </label>
+                    {% empty %}
+                    <p class="text-sm text-gray-500 text-center py-4">Aucun contact disponible pour créer un groupe.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="p-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2 flex-shrink-0 bg-white dark:bg-gray-900">
+            <button onclick="document.getElementById('create-group-modal').style.display='none'"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+                Annuler
+            </button>
+            <button onclick="createNewGroupChat()"
+                class="px-5 py-2.5 text-sm font-bold bg-accent hover:bg-accent-hover text-white rounded-xl transition-all shadow-sm active:scale-95">
+                Créer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- New Private Message Modal (Search all users) -->
+<div id="new-message-modal"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-center justify-center p-4"
+    style="display:none"
+    onclick="if(event.target===this){this.style.display='none'}">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white">Nouvelle discussion</h3>
+            <button onclick="document.getElementById('new-message-modal').style.display='none'"
+                class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-2 border-b border-gray-100 dark:border-gray-800">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <input type="text" id="user-search-input" onkeyup="filterNewMessageUsers(this.value)" placeholder="Rechercher un utilisateur…"
+                    class="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-500 text-[14px] rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-0">
+            </div>
+        </div>
+        <div class="p-4 overflow-y-auto hide-scroll flex-1 space-y-1">
+            {% for u in users %}
+            <div onclick="startPrivateChat({{ u.id }})"
+                class="new-msg-user-item flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors">
+                {% if u.photoProfil %}
+                <img src="{{ u.photoProfil.url }}" alt="" class="w-10 h-10 rounded-full object-cover">
+                {% else %}
+                <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-500 dark:text-gray-300">
+                    {{ u.prenom|first }}{{ u.nom|first }}
+                </div>
+                {% endif %}
+                <div class="flex-1">
+                    <p class="text-[14.5px] font-semibold text-gray-900 dark:text-white">{{ u.prenom }} {{ u.nom }}</p>
+                    <p class="text-[12px] text-gray-500 dark:text-gray-400">{{ u.numero_telephone }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-sm text-gray-500 text-center py-4">Aucun utilisateur trouvé.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+<!-- Add Status Modal -->
+<div id="add-status-modal"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-center justify-center p-4"
+    style="display:none"
+    onclick="if(event.target===this){this.style.display='none'}">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white">Créer un statut</h3>
+            <button onclick="document.getElementById('add-status-modal').style.display='none'"
+                class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <textarea id="status-content" rows="4"
+                class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-[15px] text-gray-900 dark:text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+                placeholder="Quelque chose à partager ?"></textarea>
+            <div class="mt-4 flex justify-end gap-2">
+                <button onclick="document.getElementById('add-status-modal').style.display='none'"
+                    class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button onclick="submitStatus()"
+                    class="px-5 py-2.5 text-sm font-bold bg-accent hover:bg-accent-hover text-white rounded-xl transition-all shadow-sm active:scale-95">
+                    Publier
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Status Full Screen -->
+<div id="view-status-modal"
+    class="fixed inset-0 bg-[#020617] z-[100] flex-col"
+    style="display:none">
+    <div class="absolute inset-0 bg-accent opacity-5 blur-[120px] pointer-events-none"></div>
+
+    <!-- Top bar -->
+    <div class="relative z-10 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img id="vs-photo" src="" class="w-10 h-10 rounded-full object-cover ring-2 ring-white/20 hidden">
+            <div id="vs-initials" class="w-10 h-10 rounded-full bg-white/10 hidden items-center justify-center text-white font-bold text-sm"></div>
+            <div>
+                <p id="vs-name" class="text-white text-[15px] font-bold"></p>
+                <p id="vs-date" class="text-white/50 text-xs"></p>
+            </div>
+        </div>
+        <button onclick="document.getElementById('view-status-modal').style.display='none'"
+            class="text-white/60 hover:text-white transition-colors">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+
+    <!-- Content -->
+    <div class="relative z-10 flex-1 flex items-center justify-center px-8 text-center">
+        <h1 id="vs-content" class="text-5xl sm:text-7xl font-bold text-white tracking-widest uppercase leading-tight"
+            style="text-shadow: 0 4px 40px rgba(0,0,0,0.5)"></h1>
+    </div>
+
+    <!-- Reply input -->
+    <div class="relative z-10 px-6 pb-8">
+        <div class="max-w-xl mx-auto flex items-center gap-3 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full py-3 px-5 shadow-2xl">
+            <input type="text" placeholder="Répondre…"
+                class="flex-1 bg-transparent text-white placeholder-white/40 focus:outline-none text-[15px]">
+            <button class="text-white hover:text-accent transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ════ Utilities ════ */
+function getCookie(name) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+    });
+    return v;
+}
+
+function filterItems(q) {
+    const lc = q.toLowerCase();
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+        const text = el.querySelector('p')?.textContent?.toLowerCase() || '';
+        el.style.display = text.includes(lc) ? '' : 'none';
+    });
+}
+
+function filterNewMessageUsers(q) {
+    const lc = q.toLowerCase();
+    document.querySelectorAll('.new-msg-user-item').forEach(el => {
+        const text = el.textContent.toLowerCase();
+        el.style.display = text.includes(lc) ? '' : 'none';
+    });
+}
+
+function setActive(el) {
+    document.querySelectorAll('.sidebar-item').forEach(e => e.classList.remove('bg-gray-100', 'dark:bg-gray-800'));
+    if (el) { el.classList.add('bg-gray-100', 'dark:bg-gray-800'); el.classList.remove('hover:bg-gray-100'); }
+}
+
+/* ════ Contacts and Groups ════ */
+async function addContactByPhone() {
+    const phone = document.getElementById('contact-phone-input').value.trim();
+    if (!phone) return;
+    try {
+        const res = await fetch('/accounts/contact/add_by_phone/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numero_telephone: phone })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            document.getElementById('add-contact-modal').style.display = 'none';
+            document.getElementById('contact-phone-input').value = '';
+            location.reload(); // Reload to show new contact
+        } else {
+            alert(data.message);
+        }
+    } catch(e) { console.error(e); }
+}
+
+async function createNewGroupChat() {
+    const groupName = document.getElementById('group-name-input').value.trim();
+    const checkboxes = document.querySelectorAll('.group-contact-checkbox:checked');
+    const contactIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (contactIds.length === 0) {
+        alert("Veuillez sélectionner au moins un contact pour créer un groupe.");
+        return;
+    }
+    
+    try {
+        const res = await fetch('/chat/group/create/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nom: groupName || "Groupe", contact_ids: contactIds })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            document.getElementById('create-group-modal').style.display = 'none';
+            openChat(data.discussion_id, null);
+            setTimeout(() => location.reload(), 500); // Reload to update sidebar
+        } else {
+            alert(data.message);
+        }
+    } catch(e) { console.error(e); }
+}
+
+/* ════ Status ════ */
+async function loadStories() {
+    try {
+        const res = await fetch('/status/feed/');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+        const container = document.getElementById('stories-list');
+        while (container.children.length > 1) container.removeChild(container.lastChild);
+        const myId = '{{ request.user.id }}';
+        data.feed.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'flex flex-col items-center gap-1 cursor-pointer flex-shrink-0';
+            div.onclick = () => viewStatus(s);
+            const avatar = s.user_photo
+                ? `<img src="${s.user_photo}" class="w-[52px] h-[52px] rounded-full object-cover ring-2 ring-accent ring-offset-2 ring-offset-white dark:ring-offset-[#111111]">`
+                : `<div class="w-[52px] h-[52px] rounded-full bg-gradient-to-br from-blue-400 to-accent flex items-center justify-center text-white font-bold text-lg ring-2 ring-accent ring-offset-2 ring-offset-white dark:ring-offset-[#111111]">${s.user_nom.charAt(0)}</div>`;
+            const label = String(s.user_id) === myId ? 'Moi' : s.user_nom.split(' ')[0];
+            div.innerHTML = `${avatar}<span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 truncate max-w-[60px]">${label}</span>`;
+            container.appendChild(div);
+        });
+    } catch(e) { console.error(e); }
+}
+
+async function submitStatus() {
+    const c = document.getElementById('status-content').value.trim();
+    if (!c) return;
+    try {
+        const res = await fetch('/status/add/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contenu: c })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            document.getElementById('add-status-modal').style.display = 'none';
+            document.getElementById('status-content').value = '';
+            loadStories();
+        }
+    } catch(e) { console.error(e); }
+}
+
+function viewStatus(s) {
+    const modal = document.getElementById('view-status-modal');
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+    document.getElementById('vs-content').textContent = s.contenu || '';
+    document.getElementById('vs-name').textContent = s.user_nom;
+    document.getElementById('vs-date').textContent = s.date;
+    const photo = document.getElementById('vs-photo');
+    const init  = document.getElementById('vs-initials');
+    if (s.user_photo) {
+        photo.src = s.user_photo;
+        photo.classList.remove('hidden'); photo.classList.add('flex');
+        init.classList.add('hidden');     init.classList.remove('flex');
+    } else {
+        photo.classList.add('hidden');
+        init.textContent = s.user_nom.charAt(0);
+        init.classList.remove('hidden'); init.classList.add('flex');
+    }
+}
+
+/* ════ Chat ════ */
+async function startPrivateChat(userId) {
+    try {
+        const res = await fetch(`/chat/private/${userId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.status === 'success') { openChat(data.discussion_id, null); setTimeout(() => location.reload(), 800); }
+    } catch(e) { console.error(e); }
+}
+
+async function openChat(id, element) {
+    if (element) setActive(element);
+    
+    // On mobile screens (<768px): hide sidebar, show chat
+    if (window.innerWidth < 768) {
+        document.getElementById('sidebar').classList.add('hidden');
+    }
+    document.getElementById('main-chat').classList.remove('hidden');
+
+    try {
+        const res = await fetch(`/chat/room/${id}/`);
+        const data = await res.json();
+        if (data.status === 'success') renderChatRoom(data);
+    } catch(e) { console.error(e); }
+}
+
+const ME = '{{ request.user.id }}';
+
+function bubbleHTML(m, avatarHtml) {
+    const mine = m.is_mine !== undefined ? m.is_mine : String(m.expediteur_id) === ME;
+    const content = m.contenu || m.message || '';
+    const time = m.date || '';
+    const smallAvatar = avatarHtml ? avatarHtml.replace(/w-\d+ h-\d+/g, 'w-8 h-8') : '';
+    return `
+    <div class="flex ${mine ? 'justify-end' : 'justify-start items-end gap-2.5'}">
+        ${!mine ? `<div class="flex-shrink-0">${smallAvatar}</div>` : ''}
+        <div class="flex flex-col ${mine ? 'items-end' : 'items-start'} max-w-[72%]">
+            <div class="px-4 py-2.5 text-[14px] leading-relaxed break-words
+                ${mine
+                    ? 'bg-accent text-white rounded-[18px] rounded-br-[4px] shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-[18px] rounded-bl-[4px] shadow-sm border border-gray-100 dark:border-gray-700/60'}">
+                ${content}
+            </div>
+            <div class="flex items-center gap-1.5 mt-1 px-1">
+                <span class="text-[10px] font-medium text-gray-400">${time}</span>
+                ${mine ? `<svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>` : ''}
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderChatRoom(data) {
+    const wrap = document.getElementById('main-chat');
+    const other = data.other_user || { nom: 'Groupe', en_ligne: false, photo: null };
+    const avatarHtml = other.photo
+        ? `<img src="${other.photo}" class="w-11 h-11 rounded-full object-cover">`
+        : `<div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-accent flex items-center justify-center text-accent text-base font-bold text-white">${other.nom.charAt(0)}</div>`;
+
+    wrap.innerHTML = `
+        <!-- Chat Header -->
+        <div class="px-5 py-3.5 bg-white dark:bg-[#111111] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <button class="md:hidden mr-1 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
+                    onclick="document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('main-chat').classList.add('hidden');">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="relative">${avatarHtml}</div>
+                <div>
+                    <h2 class="text-[15px] font-bold text-gray-900 dark:text-white leading-none mb-0.5">${other.nom}</h2>
+                    ${other.en_ligne !== undefined
+                        ? `<p class="text-[12px] font-semibold ${other.en_ligne ? 'text-success' : 'text-gray-400'}">${other.en_ligne ? 'En ligne' : 'Hors ligne'}</p>`
+                        : ''}
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                </button>
+                <button class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+                <button class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messages-list"
+            class="flex-1 overflow-y-auto hide-scroll px-5 py-5 space-y-3 bg-gray-50/50 dark:bg-[#0C0C0C]">
+            ${data.messages.length === 0
+                ? `<div class="flex items-center justify-center h-full"><p class="text-sm text-gray-400 text-center">Aucun message. Soyez le premier à écrire !</p></div>`
+                : data.messages.map(m => bubbleHTML(m, avatarHtml)).join('')}
+        </div>
+
+        <!-- Compose -->
+        <div class="px-4 py-3.5 bg-white dark:bg-[#111111] border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+            <form id="send-form"
+                class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-2xl px-2 py-1.5 ring-2 ring-transparent focus-within:ring-accent/30 transition-all">
+                <button type="button" class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent transition-colors">
+                    <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
+                <button type="button" class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent transition-colors hidden sm:flex">
+                    <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+                <input type="text" id="msg-input" autocomplete="off"
+                    placeholder="Écrire un message…"
+                    class="flex-1 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 text-[14px] focus:outline-none min-w-0 py-1.5 px-1">
+                <button type="submit"
+                    class="w-9 h-9 rounded-xl bg-accent hover:bg-accent-hover text-white flex items-center justify-center shadow-sm transition-all active:scale-95">
+                    <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                </button>
+            </form>
+        </div>
+    `;
+
+    // Scroll to bottom
+    const list = document.getElementById('messages-list');
+    list.scrollTop = list.scrollHeight;
+
+    // WebSocket connection
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    if (window.chatSocket) window.chatSocket.close();
+    window.chatSocket = new WebSocket(`${proto}//${location.host}/ws/chat/${data.discussion_id}/`);
+
+    window.chatSocket.onmessage = function(e) {
+        const msg = JSON.parse(e.data);
+        msg.is_mine = String(msg.expediteur_id) === ME;
+        list.insertAdjacentHTML('beforeend', bubbleHTML(msg, avatarHtml));
+        list.scrollTop = list.scrollHeight;
+    };
+
+    window.chatSocket.onclose = function() {
+        console.warn('WebSocket fermé.');
+    };
+
+    // Send form
+    document.getElementById('send-form').onsubmit = function(e) {
+        e.preventDefault();
+        const input = document.getElementById('msg-input');
+        const text = input.value.trim();
+        if (text && window.chatSocket && window.chatSocket.readyState === WebSocket.OPEN) {
+            window.chatSocket.send(JSON.stringify({ message: text }));
+            input.value = '';
+        }
+    };
+}
+
+/* ════ Init ════ */
+document.addEventListener('DOMContentLoaded', loadStories);
+</script>
+{% endblock %}
